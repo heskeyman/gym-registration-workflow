@@ -1,0 +1,594 @@
+{
+  "name": "User Registration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gym-register",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "43daa0df-9f85-4c86-8f29-c31e75071982",
+      "name": "Webhook",
+      "webhookId": "6cfcc0b7-3ca3-4025-8b16-3605a6500f64"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appXCW1heCZFvlGSo",
+          "mode": "list",
+          "cachedResultName": "Gym Management System",
+          "cachedResultUrl": "https://airtable.com/appXCW1heCZFvlGSo"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbleqNi2Sno4ttfpW",
+          "mode": "list",
+          "cachedResultName": "Members",
+          "cachedResultUrl": "https://airtable.com/appXCW1heCZFvlGSo/tbleqNi2Sno4ttfpW"
+        },
+        "filterByFormula": "={{\"{Email} = '\" + $input.first().json[\"email\"] + \"'\"}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        -128
+      ],
+      "id": "f327d20e-9c1f-4142-9175-a447ae9f0874",
+      "name": "Search records",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XqOGwce4EUzaiU9i",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the original user data from the first Code node\n// (Ensure the name 'Validate & Prepare Data' matches your first Code node exactly!)\nconst originalData = $('Validate & Prepare Data').first().json;\n\n// 2. Get the search result from Airtable\nconst searchResult = $input.first().json;\n\n// 3. Check if we found a user\nlet status = 'new';\nif (searchResult.records && searchResult.records.length > 0) {\n  status = 'duplicate';\n}\n\n// 4. Return the data so the next node can use it\nreturn [{\n  json: {\n    ...originalData, // This restores all the user fields (name, email, etc.)\n    status: status   // This adds a status flag for the next IF node\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        112
+      ],
+      "id": "14b6aef6-3363-4b96-925c-ed31bab74d36",
+      "name": "Data Router"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data\nconst input = $input.first().json;\n\n// Handle both nested { \"body\": ... } and flat { ... } formats\nconst data = input.body || input;\n\nreturn [{\n  json: {\n    full_name: data.full_name || \"New Member\",\n    email: data.email || \"\",\n    phone: data.phone || \"\",\n    plan_type: data.plan_type || \"monthly\",\n    amount_paid: data.amount_paid || 0,\n    start_date: new Date().toISOString().split('T')[0],\n    expiry_date: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        96
+      ],
+      "id": "f61cbbab-79b9-4194-bb63-a07344ae471e",
+      "name": "Validate & Prepare Data"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appXCW1heCZFvlGSo",
+          "mode": "list",
+          "cachedResultName": "Gym Management System",
+          "cachedResultUrl": "https://airtable.com/appXCW1heCZFvlGSo"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbleqNi2Sno4ttfpW",
+          "mode": "list",
+          "cachedResultName": "Members",
+          "cachedResultUrl": "https://airtable.com/appXCW1heCZFvlGSo/tbleqNi2Sno4ttfpW"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Renewal Count": 0,
+            "Amount Paid": "={{ $json.amount_paid }}",
+            "Full Name": "={{ $json.full_name }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "Subscription Status": "=active",
+            "Subscription Start Date": "={{ $json.start_date }}",
+            "Subscription Expiry Date": "={{ $json.expiry_date }}",
+            "Plan Type": "={{ $json.plan_type }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Subscription Status",
+              "displayName": "Subscription Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "active",
+                  "value": "active"
+                },
+                {
+                  "name": "expired",
+                  "value": "expired"
+                },
+                {
+                  "name": "cancelled",
+                  "value": "cancelled"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Subscription Start Date",
+              "displayName": "Subscription Start Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Subscription Expiry Date",
+              "displayName": "Subscription Expiry Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Plan Type",
+              "displayName": "Plan Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "monthly",
+                  "value": "monthly"
+                },
+                {
+                  "name": "quarterly",
+                  "value": "quarterly"
+                },
+                {
+                  "name": "annual",
+                  "value": "annual"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Renewal Count",
+              "displayName": "Renewal Count",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Renewed",
+              "displayName": "Last Renewed",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Amount Paid",
+              "displayName": "Amount Paid",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Renewal Logs (Linked)",
+              "displayName": "Renewal Logs (Linked)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Total Renewals",
+              "displayName": "Total Renewals",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Payment Status",
+              "displayName": "Last Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Renewal Date",
+              "displayName": "Last Renewal Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Days Until Expiry",
+              "displayName": "Days Until Expiry",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Is Expired?",
+              "displayName": "Is Expired?",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "AI: Renewal Risk Assessment",
+              "displayName": "AI: Renewal Risk Assessment",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AI: Upsell Opportunity",
+              "displayName": "AI: Upsell Opportunity",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": "={{ true }}"
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        -160
+      ],
+      "id": "5fa57347-f58b-42f4-bc0e-02fd69deee26",
+      "name": "Create a record",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XqOGwce4EUzaiU9i",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aae1ad2f-b344-47bd-af46-a25a2dedda77",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "new",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        -32
+      ],
+      "id": "79ab24c5-0acd-400b-a25b-b0b1eb2ca48a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Registration successful and email sent!\"\n}",
+        "options": {
+          "responseCode": "={{ 201}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1312,
+        -16
+      ],
+      "id": "2e6c81a8-7e33-44d7-bc53-74f950976d10",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"A member with this email already exists.\"\n}",
+        "options": {
+          "responseCode": "={{ 409 }}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        144
+      ],
+      "id": "513da407-abf1-4c7d-bcd4-a4ad4d3e2544",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.fields.Email }}",
+        "subject": "=Welcome to the Gym, {{ $('Validate & Prepare Data').first().json.full_name }}!",
+        "message": "=<h3>Welcome, {{ $('Validate & Prepare Data').first().json.full_name }}!</h3>\n<p>Your gym membership is now active.</p>\n<ul>\n    <li><strong>Plan:</strong> {{ $('Validate & Prepare Data').first().json.plan_type }}</li>\n    <li><strong>Start Date:</strong> {{ $('Validate & Prepare Data').first().json.start_date }}</li>\n    <li><strong>Expiry Date:</strong> {{ $('Validate & Prepare Data').first().json.expiry_date }}</li>\n</ul>\n<p>We look forward to seeing you! 💪</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        -16
+      ],
+      "id": "514d22ec-a4e6-490e-8469-2e1e22a4d278",
+      "name": "Send a message",
+      "webhookId": "31917380-449a-4aa9-842e-589042eb3e82",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hemSJiVKKftSz8yY",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "jaiyeobasamueloluwapelumi@gmail.com",
+        "subject": "=🚨 New Member Registered: {{ $('Validate & Prepare Data').item.json.full_name }}",
+        "message": "=<h3>New Registration Alert</h3>\n<p>A new member has joined the gym!</p>\n<ul>\n  <li><strong>Name:</strong> {{ $('Validate & Prepare Data').item.json.full_name }}</li>\n  <li><strong>Email:</strong> {{ $('Validate & Prepare Data').item.json.email }}</li>\n  <li><strong>Plan:</strong> {{ $('Validate & Prepare Data').item.json.plan_type }}</li>\n  <li><strong>Amount:</strong> ₦{{ $('Validate & Prepare Data').item.json.amount_paid }}</li>\n</ul>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -16
+      ],
+      "id": "b25a5ac8-6194-408f-ae46-e382536b4ee0",
+      "name": "Send a message1",
+      "webhookId": "da336857-6493-4093-ab1b-f84869044d13",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hemSJiVKKftSz8yY",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate & Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Data Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Router": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "aa23cff3-6f06-414f-8ba5-6b2ea34d0f0c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "be3742841223d56f8c2efbcc7418b223a8c7e0ca323e7f5263b7783d41d69071"
+  },
+  "id": "ZyQ70d3kNBI0rA7l",
+  "tags": []
+}
