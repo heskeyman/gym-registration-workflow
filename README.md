@@ -1,5 +1,11 @@
 # 🏋️ Gym Subscription Management System
 
+### 📸 Screenshots
+Here is a preview of the n8n workflow:
+![n8n Workflow Canvas](https://github.com/heskeyman/gym-registration-workflow/blob/main/workflow-preview.png.JPG?raw=true
+)
+https://github.com/heskeyman/gym-registration-workflow/blob/main/workflow-preview.png.JPG?raw=true
+
 A workflow automation project built with **n8n** and **Airtable** to manage gym memberships, automate user registration, and handle expiry notifications.
 
 ##  Project Structure
